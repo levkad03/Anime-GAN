@@ -10,7 +10,7 @@ from torch.utils.tensorboard import SummaryWriter
 from dataset import AnimeFacesDataset
 from discriminator import Discriminator
 from generator import Generator
-from utils import initialize_weights
+from utils import initialize_weights, load_checkpoint, save_checkpoint
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using device: {device}")
@@ -20,10 +20,12 @@ BATCH_SIZE = 128
 IMAGE_SIZE = 64
 CHANNELS_IMG = 3
 Z_DIM = 1
-NUM_EPOCHS = 5
+NUM_EPOCHS = 10
 FEATURES_DISC = 64
 FEATURES_GEN = 64
 DATA_DIR = "data"
+LOAD_MODEL = False
+CHECKPOINT_PATH = "models/generator_checkpoint.pth.tar"
 
 transform = transforms.Compose(
     [
@@ -41,6 +43,11 @@ dataset = AnimeFacesDataset(DATA_DIR, transform=transform, image_size=IMAGE_SIZE
 loader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
 
 gen = Generator(Z_DIM, CHANNELS_IMG, FEATURES_GEN).to(device)
+
+if LOAD_MODEL:
+    checkpoint = torch.load(CHECKPOINT_PATH, map_location=device)
+    load_checkpoint(checkpoint, gen)
+
 disc = Discriminator(CHANNELS_IMG, FEATURES_DISC).to(device)
 initialize_weights(gen)
 initialize_weights(disc)
@@ -84,7 +91,7 @@ for epoch in range(NUM_EPOCHS):
         # Print losses occasionally and print to tensorboard
         if batch_idx % 100 == 0:
             print(
-                f"Epoch [{epoch}/{NUM_EPOCHS}] Batch {batch_idx}/{len(loader)} \
+                f"Epoch [{epoch + 1}/{NUM_EPOCHS}] Batch {batch_idx}/{len(loader)} \
                 Loss D: {loss_disc:.4f}, Loss G: {loss_gen:.4f}"
             )
 
@@ -98,3 +105,5 @@ for epoch in range(NUM_EPOCHS):
                 writer_fake.add_image("Fake", img_grid_fake, global_step=step)
 
             step += 1
+
+    save_checkpoint({"state_dict": gen.state_dict()}, filename=CHECKPOINT_PATH)
