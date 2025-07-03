@@ -10,7 +10,7 @@ class Generator(nn.Module):
             self._block(z_dim, features_g * 16, 4, 1, 0),  # 4x4
             self._block(features_g * 16, features_g * 8, 4, 2, 1),  # 8x8
             self._block(features_g * 8, features_g * 4, 4, 2, 1),  # 16x16
-            self._block(features_g * 16, features_g * 8, 4, 2, 1),  # 32x32
+            self._block(features_g * 4, features_g * 2, 4, 2, 1),  # 32x32
             nn.ConvTranspose2d(
                 features_g * 2, channels_img, kernel_size=4, stride=2, padding=1
             ),  # 64x64
